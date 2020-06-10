@@ -1,0 +1,224 @@
+---
+title: "Data 612 - Project 1"
+author: "Paul Perez"
+date: "6/9/2020"
+output:
+  html_document:
+    df_print: paged
+    highlight: pygments
+    theme: yeti
+    toc: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r wrap-hook, echo=FALSE, message=FALSE, warning=FALSE}
+library(knitr)
+hook_output = knit_hooks$get('output')
+knit_hooks$set(output = function(x, options) {
+  # this hook is used only when the linewidth option is not NULL
+  if (!is.null(n <- options$linewidth)) {
+    x = knitr:::split_lines(x)
+    # any lines wider than n should be wrapped
+    if (any(nchar(x) > n)) x = strwrap(x, width = n)
+    x = paste(x, collapse = '\n')
+  }
+  hook_output(x, options)
+})
+```
+
+## The Recommender System
+This system recommends movie's to film enthusiasts using the MovieLens `ml-latest-small` dataset. This set contains 100,836 ratings which spans 610 users, 9742 movies and 3,683 tag applications.The data is contained within 4 csv files; `links.csv`, `ratings.csv`, `movies.csv`, and `tags.csv`. To simplify the system in this project, we'll only be joining the `ratings.csv` and `movies.csv` on `movieId` field.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(tidyr)
+library(kableExtra)
+```
+## Data Ingestion, Selection, Manipulation
+```{r}
+movies <- read.csv('https://raw.githubusercontent.com/ChefPaul/data612/master/Project%201/movies.csv')
+ratings <- read.csv('https://raw.githubusercontent.com/ChefPaul/data612/master/Project%201/ratings.csv')
+```
+### Preview of Movies & Ratings datasets
+```{r}
+head(movies)
+head(ratings)
+```
+
+### Join Movies & Ratings datasets
+```{r}
+joined_data <- full_join(ratings, movies, by = 'movieId')
+joined_data_preview <- head(joined_data, 10)
+joined_data_preview %>% kable(caption = "Joined Data Preview") %>% kable_styling("striped", full_width = TRUE)
+```
+
+### Slice dataset to only contain UserId, Movie Title, and Movie Rating
+```{r}
+data <- joined_data[,c(1,5,3)]
+data_preview <- head(data, 10)
+data_preview  %>% kable(caption = "Sliced Dataset Preview") %>% kable_styling("striped", full_width = TRUE)
+```
+### Identify Top 5 Most Rated Movies
+In order to create a sparse dataset, but still ensure we have a sufficient number of ratings, we'll have to identify the Top 5 movies that were the most frequently rated.
+
+```{r}
+# top 5 movies 
+movie_freq <- table(joined_data$title) %>% as.data.frame() %>% arrange(desc(Freq))
+top_5 <- movie_freq[1:5,][1]
+top_5  %>% kable(caption = "Top 5 Frequently Rated Movies Preview") %>% kable_styling("striped", full_width = TRUE)
+```
+
+Now that we've identified the most frequently rated movies, we can filter the dataset to only contain these movies.
+
+```{r}
+sub_data <- data %>% filter(title %in% c("Forrest Gump (1994)", "Shawshank Redemption, The (1994)", "Pulp Fiction (1994)", "Silence of the Lambs, The (1991)", "Matrix, The (1999)"))
+sub_data_preview <- head(sub_data, 10)
+sub_data_preview  %>% kable(caption = "Subset of Data Preview") %>% kable_styling("striped", full_width = TRUE)
+```
+
+Finally, since we have a subset of the data, we can create a user-item matrix utilizing the `spread()` function from the `tidyr` package.
+```{r}
+wide_data <- sub_data %>% spread(title, rating)
+wide_data_preview <- head(wide_data)
+wide_data_preview %>% kable(caption = "User-Item Matrix Preview") %>% kable_styling("striped", full_width = TRUE)
+```
+
+## Split into Training & Test datasets using an 80/20 Ratio
+We can utilize the `sample()` function to split the data into training and test sets. 
+```{r}
+set.seed(123)
+train_sample <- sample(x = c(TRUE, FALSE), size = nrow(wide_data), replace = TRUE, prob = c(0.8, 0.2))
+train_id <- as.matrix(wide_data[train_sample,])
+test_id <- as.matrix(wide_data[!train_sample,])
+```
+
+While splitting, the `userId` field will remain within the matrix, but we can remove that to further build out the system and run calculations on each matrix.
+```{r linewidth=60}
+train <- train_id[,2:6]
+train_preview <- head(train)
+train_preview %>% kable(caption = "Training User-Item Matrix Preview") %>% kable_styling("striped", full_width = TRUE)
+```
+
+```{r linewidth=60}
+test <- test_id[,2:6]
+test_preview <- head(test)
+test_preview %>% kable(caption = "Testing User-Item Matrix Preview") %>% kable_styling("striped", full_width = TRUE)
+```
+
+## Calculate the Raw Average (Training Set)
+We'll need to calculate the raw average (mean) for each user-item combination in the training set.
+
+```{r}
+raw_avg <- mean(as.matrix(train), na.rm = TRUE)
+```
+
+## RMSE for Raw Average
+
+Since we're going to have to calculate the RMSE multiple times, we can create the function below. 
+
+![RMSE Formula](rmse.jpg)
+
+```{r}
+rmse <- function(m, o){
+  sqrt(mean((m - o)^2, na.rm = TRUE))
+}
+```
+
+### Training Set RMSE
+
+```{r}
+train_rmse <- rmse(raw_avg, train)
+train_rmse
+```
+
+### Test Set RMSE
+
+```{r}
+test_rmse <- rmse(raw_avg, test)
+test_rmse
+```
+
+## User & Item Bias from Training Set
+Now that we have the mean for the training set, we can calculate each user & item bias. 
+
+```{r}
+user_bias <- rowMeans(train, na.rm = TRUE) - raw_avg
+item_bias <- colMeans(train, na.rm = TRUE) - raw_avg
+```
+
+### Calculating the Baseline Predictors
+```{r}
+baseline_predictors <- user_bias + item_bias + raw_avg
+```
+
+Since ratings cannot be less than 1 or greater than 5, we can adjust any value that is out of range.
+
+```{r}
+baseline_predictors[baseline_predictors < 1] <- 1
+baseline_predictors[baseline_predictors > 5] <- 5
+```
+
+### Calculating the RMSE for the Basline Predictors of the Training Set
+
+```{r}
+train_baseline_rmse <- rmse(raw_avg, baseline_predictors)
+```
+
+## Calculate the Raw Average (Test Set)
+We'll need to calculate the raw average (mean) for each user-item combination in the test set.
+
+```{r}
+test_avg <- mean(as.matrix(test), na.rm = TRUE)
+```
+
+## User & Item Bias from Training Set
+Now that we have the mean for the test set, we can calculate each user & item bias. 
+
+```{r}
+test_user_bias <- rowMeans(test, na.rm = TRUE) - test_avg
+test_item_bias <- colMeans(test, na.rm = TRUE) - test_avg
+```
+
+### Calculating the Baseline Predictors
+
+```{r}
+test_baseline_predictors <- test_avg + test_item_bias + test_user_bias
+```
+
+Since ratings cannot be less than 1 or greater than 5, we can adjust any value that is out of range.
+
+```{r}
+test_baseline_predictors[test_baseline_predictors < 1] <- 1
+test_baseline_predictors[test_baseline_predictors > 5] <- 5
+```
+
+### Calculating the RMSE for the Basline Predictors of the Test Set
+
+```{r}
+test_baseline_rmse <- rmse(test_avg, test_baseline_predictors)
+```
+
+
+## Summary
+
+```{r}
+test_eval <- (1 - (test_baseline_rmse / test_rmse)) * 100
+test_eval
+```
+
+```{r}
+train_eval <- (1 - (train_baseline_rmse / train_rmse)) * 100
+train_eval
+```
+
+After creating the recommender system, we can see that the test evaluation show's a 24.96% improvement while the training set's evaluation shows a 19.83% improvement.
+
+### References
+F. Maxwell Harper and Joseph A. Konstan. 2015. The MovieLens Datasets: History and Context. ACM Transactions on Interactive Intelligent Systems (TiiS) 5, 4: 19:1–19:19. https://doi.org/10.1145/2827872
+
+#### Source Code
+[GitHub Repository](https://github.com/ChefPaul/data612/tree/master/Project%201)
