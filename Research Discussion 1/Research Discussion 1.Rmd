@@ -1,0 +1,42 @@
+---
+title: "Data 612 - Research Discussion 1"
+author: "Paul Perez"
+date: "6/15/2020"
+output:
+  html_document:
+    df_print: paged
+    highlight: pygments
+    theme: yeti
+    toc: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+  pdf_document:
+    toc: yes
+---
+
+\newpage
+
+# Part 1 - Commercial Recommender Systems
+
+## Instructions
+Now that we have covered basic techniques for recommender systems, choose one commercial recommender and describe how you think it works (content-based, collaborative filtering, etc). Does the technique deliver a good experience or are the recommendations off-target?
+
+## Response
+Since I am a frequent shopper on Amazon, I wanted to research how the recommender system works. Considering that when I search for a product, I am also recommended related products, specifically in the example of books. I can click the link to a specific book within Amazon, and scroll down to see 'Frequently bought together' which is a section of other very similar books. I believe that Amazon is looking at the actual products to build their recommender system.  While Collaborative filtering is the most common recommender technique used for online shopping products, it might not work for Amazon's case. Collaborative filtering tries to predict a customer's preference based on other similar customers. Instead, Amazon adopted an item-to-item collaborative filter which would review the visitor's recenty purchase history for each purchase, and generate a list of related items. This list would also be pulled for similar visitor's who have made similar purchases, and now weights could be applied to those similar lists based on how closely related they were. Amazon found that analyzing purchase histories at the item level yielded better recommendations than analyzing them at the customer level. I think this was a brilliant idea to truly understand what teh intentions of the customer were while entering the site, and providing them with products that they may ultimately end up wanting. Since Amazon has such a large variety of 
+
+# Part 2 - Attacks on Recommender Systems
+
+## Instructions
+Read the article below and consider how to handle attacks on recommender systems. Can you think of a similar example where a collective effort to alter the workings of content recommendations have been successful? How would you design a system to prevent this kind of abuse?
+
+## Response
+The use of collaborative or collective efforts to "spam" a page and try to hurt the reputation of an online account, and even talk negatively against a specific product or company is fairly common. In platforms where recommender systems are not being use, bot farms are used to increase site traffic, and even alter the way machine learning algorithms distribute online advertisements based on these site traffic metrics which are fraudulent.I could see this become a scenario in which a site like YouTube could be attacked with a bot, or collective group of individual's that give a set of videos thumbs down which hurt the quality of that video. I think part of the system to prevent this would be validating users. For example with YouTube, if there could be a weight applied to users who are logged in that validates they're legitimate users, this can help prevent this issue. 
+
+\newpage
+
+### Sources
+Hardesty, Larry. “The History of Amazon's Recommendation Algorithm.” Amazon Science, Amazon Science, 10 June 2020, www.amazon.science/the-history-of-amazons-recommendation-algorithm.
+
+Andrews, Travis. “Wisdom of the Crowd? IMDb Users Gang up on Christian Bale's New Movie before It Even Opens.” The Washington Post, WP Company, 19 Apr. 2017, www.washingtonpost.com/news/morning-mix/wp/2017/04/19/wisdom-of-the-crowd-imdb-users-gang-up-on-the-promise-before-it-even-opens/.
+
