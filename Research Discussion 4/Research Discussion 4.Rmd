@@ -1,0 +1,36 @@
+---
+title: "Data 612 - Research Discussion 4"
+author: "Paul Perez"
+date: "7/14/2020"
+output:
+  html_document:
+    df_print: paged
+    highlight: pygments
+    theme: yeti
+    toc: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+  pdf_document:
+    toc: yes
+---
+
+\newpage
+
+# Mitigating the Harm of Recommender Systems
+
+## Instructions
+Read one or more of the articles below and consider how to counter the radicalizing effects of recommender systems or ways to prevent algorithmic discrimination.
+
+## Response
+As discussed in my last research discussion 3, social media sites can promote biases or polarized views. Renee Diresta speaked to this on wired.com article, 'Up Next: A Better Recommendation System'. The subtitle suggested that algorithms used by Facebook, YouTube, and other platforms keep usrs clicking, and each system can promote misinformation. We're at a place where recommendation systems can be built with hybrid models that look at item actions, user actions, and content. The issue is cencorship, and ensuring that news articles are fact checked, content doesn't discriminate in an offensive manner, and that overall, there isn't a spread of misinformation. These are some of the steps that need to be taken prior to even building out recommender systems. The data going into the model needs to be filtered accordingly.
+
+\newpage
+
+### Sources
+Tufekci, Zeynep. “YouTube, the Great Radicalizer.” The New York Times, The New York Times, 10 Mar. 2018, www.nytimes.com/2018/03/10/opinion/sunday/youtube-politics-radical.html.
+
+DiResta, Renee. “The Web's Recommendation Engines Are Broken. Can We Fix Them?” Wired, Conde Nast, 11 Apr. 2018, www.wired.com/story/creating-ethical-recommendation-engines/.
+
+Social Influence Bias in Recommender Systems: A Methodology for Learning, Analyzing, and Mitigating Bias in Ratings
+https://goldberg.berkeley.edu/pubs/sanjay-recsys-v10.pdf
